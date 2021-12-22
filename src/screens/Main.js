@@ -6,10 +6,14 @@ import Card from '../components/Card';
 import AnimatedProgressWheel from 'react-native-progress-wheel';
 import { Easing, ScrollView } from 'react-native';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { readData, storeData } from '../../App';
+import {
+  getTotalPoints,
+  readData,
+  removeValue,
+  storeData,
+} from '../controller/AsyncStorageAPI';
 
 export default function Main({ route, navigation }) {
-  const { action, points } = route.params || 'none';
   const [actions, setActions] = useState([]);
   const [progress, setProgress] = useState(0);
   const progressWheel = useRef();
@@ -17,29 +21,40 @@ export default function Main({ route, navigation }) {
   useEffect(() => {
     (async () => {
       const current_key = `@${new Date().toDateString()}`;
+      console.log(current_key);
       if (actions.length === 0) {
-        const stored = readData(current_key);
-        setActions(stored);
-        setProgress(getTotalPoints(stored));
+        const stored = await readData(current_key);
+        if (stored != null) {
+          setActions(stored);
+        }
       } else {
         storeData(current_key, actions);
       }
     })();
+  }, [actions]);
 
-    if (action) {
-      setActions([...actions, { name: action, points }]);
-      setProgress(progress + points / 10);
-      progressWheel.current.animateTo(
-        progress + points / 10,
-        1000,
-        Easing.bezier(0.175, 0.885, 0.32, 1.275)
-      );
+  useEffect(() => {
+    if (route.params?.action != null) {
+      setActions([
+        ...actions,
+        {
+          name: route.params?.action,
+          points: route.params?.points,
+          type: route.params?.type,
+        },
+      ]);
     }
-  }, [action, points]);
+    route.params = {};
+  }, [route.params]);
 
-  function getTotalPoints(log) {
-    return log.reduce((a, b) => a.points + b.points);
-  }
+  useEffect(() => {
+    setProgress(getTotalPoints(actions) / 10);
+    progressWheel.current.animateTo(
+      getTotalPoints(actions) / 10,
+      1000,
+      Easing.bezier(0.175, 0.885, 0.32, 1.275)
+    );
+  }, [actions]);
 
   function getCurrentDate() {
     const options = {
@@ -51,19 +66,9 @@ export default function Main({ route, navigation }) {
     return new Date().toLocaleDateString('de-DE', options);
   }
 
-  const removeCard = useCallback(
-    (action, i) => {
-      setActions(actions.filter((item, index) => i !== index));
-      const newProgess = progress - action.points / 10;
-      setProgress(newProgess);
-      progressWheel.current.animateTo(
-        newProgess,
-        1000,
-        Easing.bezier(0.175, 0.885, 0.32, 1.275)
-      );
-    },
-    [progress]
-  );
+  function removeCard(action, i) {
+    setActions(actions.filter((item, index) => index !== i));
+  }
 
   return (
     <LinearGradient
@@ -83,7 +88,7 @@ export default function Main({ route, navigation }) {
       <View style={t`mb-5`}>
         <Text
           style={t.style('text-3xl py-2', {
-            fontFamily: 'PlayfairDisplay_400Regular',
+            fontFamily: 'PlayfairDisplay_600SemiBold',
           })}
         >
           eachDay
@@ -95,7 +100,11 @@ export default function Main({ route, navigation }) {
       <View
         style={t.style('w-full h-40 rounded-lg p-2 relative', style.shadow)}
       >
-        <Text style={t`font-medium text-2xl text-white w-1/2`}>
+        <Text
+          style={t.style('font-medium text-2xl text-white w-2/3', {
+            fontFamily: 'Inter_500Medium',
+          })}
+        >
           What have you done today?
         </Text>
         <View
@@ -116,8 +125,8 @@ export default function Main({ route, navigation }) {
           />
           <Text
             style={t.style(
-              'text-white absolute top-1/2 left-1/3 text-right text-xl',
-              { textAlign: 'center' }
+              'text-white absolute top-10 left-8 text-right text-xl w-10',
+              { textAlign: 'right' }
             )}
           >
             {progress}%
@@ -129,7 +138,7 @@ export default function Main({ route, navigation }) {
           {actions.map((action, i) => (
             <Card
               key={i}
-              name={action.name}
+              action={action}
               removeCard={() => removeCard(action, i)}
             />
           ))}
@@ -140,20 +149,14 @@ export default function Main({ route, navigation }) {
   );
 }
 
-export function Menubar({ navigation, points }) {
+export function Menubar({ navigation, night }) {
   return (
     <View style={t`flex flex-row justify-around items-center mt-auto mb-10`}>
-      <TouchableOpacity>
-        <Feather name="search" size={24} color="black" />
+      <TouchableOpacity onPress={() => navigation.navigate('Night')}>
+        <Feather name="moon" size={24} color={night ? 'white' : 'black'} />
       </TouchableOpacity>
-      <TouchableOpacity
-        onPress={() =>
-          navigation.navigate('Calendar', {
-            points,
-          })
-        }
-      >
-        <Feather name="calendar" size={24} color="black" />
+      <TouchableOpacity onPress={() => navigation.navigate('Calendar')}>
+        <Feather name="calendar" size={24} color={night ? 'white' : 'black'} />
       </TouchableOpacity>
       <TouchableOpacity
         style={t.style(
@@ -162,13 +165,13 @@ export function Menubar({ navigation, points }) {
         )}
         onPress={() => navigation.navigate('Select')}
       >
-        <Feather name="plus" size={24} color="white" />
+        <Feather name="plus" size={24} color={night ? 'white' : 'black'} />
       </TouchableOpacity>
       <TouchableOpacity onPress={() => navigation.navigate('Main')}>
-        <Feather name="home" size={24} color="black" />
+        <Feather name="home" size={24} color={night ? 'white' : 'black'} />
       </TouchableOpacity>
-      <TouchableOpacity>
-        <Feather name="bell" size={24} color="black" />
+      <TouchableOpacity onPress={() => navigation.navigate('Notify')}>
+        <Feather name="bell" size={24} color={night ? 'white' : 'black'} />
       </TouchableOpacity>
     </View>
   );

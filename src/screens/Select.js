@@ -7,7 +7,6 @@ import {
   Image,
 } from 'react-native';
 import t from 'twrnc';
-import ExpoFastImage from 'expo-fast-image';
 import { Feather } from '@expo/vector-icons';
 import { Ionicons } from '@expo/vector-icons';
 import { FontAwesome5 } from '@expo/vector-icons';
@@ -42,15 +41,23 @@ export default function Select({ navigation }) {
         </View>
         {cells.map((cell, i) => (
           <View key={i} style={t.style('flex-row')}>
-            <Cell name={cell[0].name} points={cell[0].points} />
-            <Cell name={cell[1].name} points={cell[1].points} />
+            <Cell
+              name={cell[0].name}
+              points={cell[0].points}
+              type={cell[0].type}
+            />
+            <Cell
+              name={cell[1].name}
+              points={cell[1].points}
+              type={cell[1].type}
+            />
           </View>
         ))}
       </>
     );
   }
 
-  function Cell({ name, points }) {
+  function Cell({ name, points, type }) {
     return (
       <TouchableOpacity
         style={t.style(
@@ -60,6 +67,7 @@ export default function Select({ navigation }) {
           navigation.navigate('Main', {
             action: name,
             points,
+            type,
           })
         }
       >
@@ -71,13 +79,13 @@ export default function Select({ navigation }) {
           {name}
         </Text>
         {name === 'Rhetorics' && (
-          <ExpoFastImage
+          <Image
             style={style.img}
             source={require(`../../assets/img/crayon-upgrade.png`)}
           />
         )}
         {name === 'Organising' && (
-          <ExpoFastImage
+          <Image
             style={style.img}
             source={require(`../../assets/img/crayon-bad-gateway-2.png`)}
           />
@@ -87,16 +95,16 @@ export default function Select({ navigation }) {
   }
 
   const Actions = [
-    { name: 'Cardio', points: '150' },
-    { name: 'Strength', points: '150' },
-    { name: 'Meditation', points: '150' },
-    { name: 'Creative Work', points: '150' },
-    { name: 'Research', points: '150' },
-    { name: 'Rhetorics', points: '150' },
-    { name: 'Paperwork', points: '150' },
-    { name: 'Cleaning', points: '150' },
-    { name: 'Building', points: '150' },
-    { name: 'Organising', points: '150' },
+    { name: 'Cardio', points: '150', type: 'Physical Activity' },
+    { name: 'Strength', points: '350', type: 'Physical Activity' },
+    { name: 'Meditation', points: '300', type: 'Mindfulness' },
+    { name: 'Creative Work', points: '50', type: 'Working' },
+    { name: 'Research', points: '100', type: 'Learning' },
+    { name: 'Rhetorics', points: '50', type: 'Learning' },
+    { name: 'Paperwork', points: '100', type: 'Running Errands' },
+    { name: 'Cleaning', points: '150', type: 'Doing Chores' },
+    { name: 'Building', points: '200', type: 'Working' },
+    { name: 'Organising', points: '150', type: 'Keeping Structure' },
   ];
 
   return (
@@ -112,9 +120,16 @@ export default function Select({ navigation }) {
         <Section cells={Actions.slice(2, 6)} name="Mind">
           <FontAwesome5 name="brain" size={24} color="black" />
         </Section>
-        <Section cells={Actions.slice(6)} name="Chores">
+        <Section cells={Actions.slice(6)} name="Errands">
           <FontAwesome5 name="briefcase" size={24} color="black" />
         </Section>
+        {/* <TouchableOpacity
+          style={t.style(
+            'w-1/2 h-30 rounded-lg bg-red-200 my-1 justify-center items-center self-start'
+          )}
+        >
+          <Feather name="plus" size={24} color="black" />
+        </TouchableOpacity> */}
       </ScrollView>
     </View>
   );

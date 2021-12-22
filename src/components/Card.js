@@ -1,7 +1,7 @@
 import { View, Text, TouchableOpacity } from 'react-native';
 import t from 'twrnc';
 
-export default function Card({ name, removeCard }) {
+export default function Card({ action, removeCard }) {
   return (
     <TouchableOpacity
       style={t.style(
@@ -11,12 +11,12 @@ export default function Card({ name, removeCard }) {
     >
       <View>
         <Text style={t.style('text-lg', 'font-medium')}>
-          {name} for One Hour
+          {action.name} for One Hour
         </Text>
-        <Text style={t.style('text-gray-400')}>Physical Activity</Text>
+        <Text style={t.style('text-gray-400')}>{action.type}</Text>
       </View>
       <View>
-        <Text style={t.style('text-green-400')}>+150</Text>
+        <Text style={t.style('text-green-400')}>+{action.points}</Text>
       </View>
     </TouchableOpacity>
   );

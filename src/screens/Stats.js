@@ -6,20 +6,32 @@ import { AreaChart, Grid, LineChart, XAxis } from 'react-native-svg-charts';
 import * as shape from 'd3-shape';
 import { Menubar } from './Main';
 import { useEffect, useState } from 'react';
+import { readData, getTotalPoints } from '../controller/AsyncStorageAPI';
 
-export default function Stats({ route, navigation }) {
-  const { points } = route.params || 0;
-  const [data, setData] = useState([50, 90, 0, 95, -4, -24, 0]);
+export default function Stats({ navigation }) {
+  const [data, setData] = useState([0, 0, 0, 0, 0, 0, 0]);
   const today = new Date().getDate();
+  const [markedDates, setMarkedDates] = useState({});
 
   useEffect(() => {
-    if (points !== undefined) {
-      setData([50, 90, 0, 95, -4, -24, Number(points / 10)]);
-      console.log(data);
-      console.log(route?.params);
-      console.log(points);
-    }
-  }, [points]);
+    (async () => {
+      for (let i = 0; i < data.length; i++) {
+        const current_date = new Date();
+        current_date.setDate(current_date.getDate() + i - 6);
+        const current_key = `@${current_date.toDateString()}`;
+        const iso_date = current_date.toISOString().substring(0, 10);
+
+        const stored = await readData(current_key);
+        if (stored != null) {
+          data[i] = getTotalPoints(stored) / 10;
+          markedDates[iso_date] = { marked: true };
+          setMarkedDates(markedDates);
+          setData(data);
+        }
+      }
+      console.log(markedDates);
+    })();
+  }, [markedDates]);
 
   return (
     <LinearGradient
@@ -54,6 +66,7 @@ export default function Stats({ route, navigation }) {
           textSectionTitleColor: 'red',
           arrowColor: 'black',
         }}
+        markedDates={markedDates}
         style={t.style('rounded-lg')}
       />
       <View
@@ -62,8 +75,12 @@ export default function Stats({ route, navigation }) {
           style.shadow
         )}
       >
-        <Text style={t.style('text-white absolute top-2 left-2')}>
-          Last 7 Days
+        <Text
+          style={t.style('text-gray-400 absolute top-4 left-4 text-lg w-1/2', {
+            fontFamily: 'Inter_500Medium',
+          })}
+        >
+          Your activity in the past 7 days
         </Text>
         <LineChart
           style={{ height: 200 }}
